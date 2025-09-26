@@ -1,0 +1,21 @@
+List of Available Tables in the SQL server:
+
+1."edw.DimCustomer" -> stores customer related data (dimension table)
+2."edw.FactTour" -> stores tour factual data (fact table)
+3."edw.FactSalesContract" -> stores sales contract data (fact table)
+4."edw.DimDate" -> stores calendar data (dimension table)
+5."edw.DimSalesLocation" -> stores sales location data (fact table)
+
+
+RELATIONSHIP Between the tables:
+All joins (Join on SK keys per specifics + guidelines):
+- DimCustomerSK: DimCustomer, FactTour, FactSalesContract
+- DimLocationSK: DimSalesLocation, FactTour
+- DimSalesLocationSK: DimSalesLocation, FactTour, FactSalesContract
+- DimCampaignHierarchySK: FactTour, FactSalesContract
+- DimTourSK: FactTour, FactSalesContract
+
+Specific Join Relationships:
+- FactTour joins FactSalesContract using ContractSK (preferred for accurate joins)
+- Avoid joining fact tables directly via DimCustomerSK unless ContractSK is unavailable
+- Use DimDate and DimSalesLocation only as dimensions
