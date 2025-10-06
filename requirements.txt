@@ -10,3 +10,7 @@ langgraph
 streamlit
 prophet
 openpyxl
+xgboost
+scikit-learn
+psutil
+shap

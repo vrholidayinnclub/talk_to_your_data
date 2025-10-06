@@ -6,7 +6,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-TABLES = ["edw.DimCustomer",
+
+
+TABLES=["edw.DimCustomer",
         "edw.FactTour",
         "edw.FactSalesContract",
         "edw.DimDate",
@@ -20,8 +22,6 @@ RELATIONSHIPS = """ All joins (Join on SK keys per specifics + guidelines):
                     - DimTourSK: FactTour, FactSalesContract
 
                     Specific Join Relationships:
-                    - FactTour joins FactSalesContract using ContractSK (preferred for accurate joins)
-                    - Avoid joining fact tables directly via DimCustomerSK unless ContractSK is unavailable
                     - Use DimDate and DimSalesLocation only as dimensions
                 """
 
@@ -30,15 +30,12 @@ conn_str = f"Driver={ODBC_DRIVER};\
             Database={ODBC_DATABASE_NAME};\
             Authentication={ODBC_AUTHENTICATION}"
 
-# conn_str = "Driver={ODBC Driver 17 for SQL Server};\
-#             Server=dc03-azsqldb03.database.windows.net;\
-#             Database=PolarisQA;\
-#             Authentication=ActiveDirectoryIntegrated"
 
 def load_glossary() -> str:
     """
     Loads data related to the Database
     """
+    logger.info("Loading Glossary...")
     df = pd.read_excel(glossary_file_path)
     df = df.dropna(subset=["Field", "Description", "Table"])
     return "\n".join(f"- {row['Table']}.{row['Field']}: {row['Description']}" for _, row in df.iterrows())
@@ -48,6 +45,7 @@ def connect_to_sql():
         return conn.cursor()
 
 def get_table_schema(cur) -> str:
+    logger.info("Loading Table Schema...")
     blocks = []
     for fqtn in TABLES:
         try:
@@ -65,6 +63,7 @@ def get_table_schema(cur) -> str:
     return "\n\n".join(blocks)
 
 def get_table_sample_data(cur, rows=5) -> str:
+    logger.info("Loading sample data...")
     blocks = []
     for fqtn in TABLES:
         try:
@@ -93,7 +92,10 @@ def get_table_metadata():
     return schema, sample_data
 
 def initialize():
-    logger.info(f"Connection string: {conn_str}")
+    logger.info("Initializing Agent...")
     glossary = load_glossary()
     tbl_schema, sample_data = get_table_metadata()
-    return glossary, tbl_schema, sample_data
+    relationships = RELATIONSHIPS
+    return glossary, tbl_schema, sample_data, relationships
+
+

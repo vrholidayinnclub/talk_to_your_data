@@ -34,13 +34,18 @@ def create_agent():
     )
 
 def classify_intent(state):
-    # status = st.status("Processing question...")
     logger.info(f"Classifying Intent.")
     agent = create_agent()
-    prompt = f"""You are an expert identifying the intent of a user question.
-    With the given question, classify it as `casual`, `business` or `prediction`.
-    If the question is about predicting future values then its a `prediction` type.
-    If the question is a `casual` question, answer it by yourself.
+    prompt = f"""You are an analytics assistant that must classify the user's question into exactly one of these categories:
+
+    - business: ask for current/historical metrics, aggregations, or retrieval via SQL.
+    - prediction: ask to forecast future numeric values over time (time series) such as next month/quarter/year, future trend, forecast, projection.
+    - classification: ask to classify or identify which items/customers fall into a class (likely to buy/churn/travel), propensity/likelihood scoring, segmentation, risk flagging.
+    - casual: small talk or general questions that do not require data/ML.
+
+    Rules:
+    - Do NOT choose prediction unless it is clearly a time-based forecast of future values.
+    - Return JSON only, no code fences, no extra text.
 
     Always answer in the below format:
     {{'question_type' : 'the question type', 'answer' : 'your answer if its `casual` type else ``'}}
@@ -63,10 +68,11 @@ def classify_intent(state):
 
 def load_context(state):
     logger.info("Loading Context.")
-    glossary, tbl_schema, sample_data = initialize()
+    glossary, tbl_schema, sample_data, relationships = initialize()
     state["glossary"]=glossary
     state["tbl_schema"]=tbl_schema
     state["sample_data"]=sample_data
+    state["relationships"]=relationships
     return state
 
 def generate_sql(state):
@@ -92,7 +98,7 @@ def generate_sql(state):
                     {state["sample_data"]}
 
                     Relationships:
-                    {RELATIONSHIPS} """.strip()
+                    {state["relationships"]} """.strip()
     
     response = agent.invoke([HumanMessage(content=prompt)])
     sql_query = re.sub(r"```(?:sql)?\s*([\s\S]+?)\s*```", r"\1", response.content.strip()).strip()
@@ -111,10 +117,15 @@ def execute_sql(state):
             return None
         cols = [d[0] for d in cur.description]
         logger.info(f"Columns fetched : {cols}")
-        rows = cur.fetchall()
-        df = pd.DataFrame.from_records(rows if rows else [], columns=cols)
-        logger.info("SQL execution completed")
-        state["data"] = df.to_dict()
+        try:
+            rows = cur.fetchall()
+            logger.info("SQL execution completed")
+            df = pd.DataFrame.from_records(rows if rows else [], columns=cols).head(1000)
+            state["data"] = df.to_dict()
+        except Exception as e:
+            logger.error(f"SQL execution failed with error: {str(e)}")
+            state["data"] = None
+       
         return state
         
 def derive_insights(state):

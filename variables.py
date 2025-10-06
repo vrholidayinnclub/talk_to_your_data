@@ -13,9 +13,14 @@ class State(TypedDict):
     glossary: str
     tbl_schema: str
     sample_data: str
+    relationships : str
     question_type: str
     prophet_plan: dict
     chart: Any
     fcst_data : Any
     accuracy_metrics: dict
+    classification_plan: dict
+    classification_results: dict
+    metrics: dict
+    classification_data: Any
 
