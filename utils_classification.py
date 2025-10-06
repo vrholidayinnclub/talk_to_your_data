@@ -214,8 +214,8 @@ def classification_expert(state: State):
                     - Always include a customer identifier for tracking
                     
                     Classification Guidelines:
-                    - Include features like: age, location, previous purchases, tour history, package type, etc.
-                    - Ensure sufficient historical data for training (at least 100+ records recommended)
+                    - Include features like: age, location, previous purchases, tour history, package type, etc.. Do not use more than 10 features.
+                    - Ensure sufficient historical data for training (ALWAYS fetch only 1000 rows.)
                     - MUST include both positive and negative examples in your SQL query
                     - Use CASE WHEN statements to create proper binary targets that include both 0 and 1 values
                     
