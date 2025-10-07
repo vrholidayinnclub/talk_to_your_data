@@ -67,7 +67,7 @@ def main():
         st.session_state["messages"] = [{"role" : "assistant", "content" : "Welcome to Holiday Inn Club Vacations! I'm your Business Analyst and I'm here to answer your business queries. How can I assist you today? "}] 
     for msg in st.session_state["messages"]:
         if msg.get("type") == "code":
-            st.chat_message(msg["role"]).code(msg["content"], language="sql")
+            st.chat_message(msg["role"]).code(msg["content"], language="sql", wrap_lines=True, height='stretch')
         elif msg.get("type") == "dataframe":
             df = pd.DataFrame(msg["content"])
             st.chat_message(msg["role"]).dataframe(df, width='stretch')
@@ -88,14 +88,15 @@ def main():
                 node = list(step.keys())[0]
                 logger.info(f"CurrNode: {node}")
 
-                if (node=="generate_sql" or node == "forecast_expert") and step.get(node).get("sql_query") is not None:
+                if (node=="generate_sql" or node == "forecast_expert" or node == "classification_expert") \
+                    and step.get(node).get("sql_query") is not None:
                     status.update(label=f"Writing SQL to fetch the required data...", state="running")
                     content = step.get(node).get("sql_query")
                     content_type = "code"
                     
                     with st.expander("SQL Query", expanded=True):
                         st.markdown("**Generated SQL Query:**")
-                        st.markdown(f"```sql\n{content}\n```")
+                        st.code(content, language="sql", wrap_lines=True, height='stretch')
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
 
                 if node=="execute_sql" and step.get(node).get("data") is not None and step.get(node).get("show_data"):
@@ -127,38 +128,41 @@ def main():
 
                 if node == "forecast":
                     status.update(label="Forecasting...", state="running")
-                    content = step.get(node).get("fcst_data")
-                    content_type = 'dataframe'
 
                     with st.expander("Data", expanded=True):
                         content = step.get(node).get("fcst_data")
                         content_type = 'dataframe'
-                        st.markdown("**Sample Forecasted Data:**")
+                        st.markdown("**📝 Sample Forecasted Data:**")
                         st.dataframe(content)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
+
                     with st.expander("Chart", expanded=True):
                         content = pio.from_json(step.get(node).get("chart"))
                         content_type = 'plotly'
-                        st.markdown(f"**Forecast Accuracy Scores**  {step.get(node).get('accuracy_metrics')} ")
+                        st.markdown(f"**📌 Forecast Error Rates**  {step.get(node).get('accuracy_metrics')} ")
                         st.plotly_chart(content, use_container_width=True)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
                     
                     with st.expander("Forecasted Insights", expanded=True):
                         content = f'{step.get(node).get("insights")}'
                         content_type = 'text'
-                        st.markdown("**Insights:**")
+                        st.markdown("**🔮 Insights:**")
                         st.write(content)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
 
-                    st.write(f"📊 Predicted with Prophet-Model with error : {step.get(node).get('accuracy_metrics')}.")
+                    content = f"📊 Predicted with Prophet-Model with error : {step.get(node).get('accuracy_metrics')}."
+                    content_type = "text"
+                    st.write(content)
+                    st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
                     status.update(label="Answer Ready ✅", state="complete")
                         
-                if node == "classification_expert" or node == "classify":
+                if node == "classification_expert":
                     status.update(label="Preparing data for prediction...", state="running")
                     classification_plan = step.get(node).get("classification_plan", {})
 
                 if node == "classify":
                     status.update(label="Predicting...", state="running")
+
                     st.subheader("📌 Likelihood by Customer Segments")
                     classification_results = step.get(node).get("classification_results", {})
                     segment_details = classification_plan.get("segment_definition", {})
@@ -206,9 +210,6 @@ def main():
                 if node == END:
                     status.update(label="Answer Ready ✅", state="complete")
                     logger.info("Workflow reached the end node.")
-
-                else:
-                    status.update(label="Answer Ready ✅", state="complete")
                     
     except Exception as e:
         logger.error(str(e))

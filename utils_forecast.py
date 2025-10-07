@@ -159,11 +159,11 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
     mask = np.isfinite(y_true) & np.isfinite(y_pred)
     y_true, y_pred = y_true[mask], y_pred[mask]
     if len(y_true) == 0:
-        return f"""\n\n MAPE: nAN \n sMAPE: nAN \n MAE: nAN  \n\n"""
+        return f"""\n\n MAPE: nAN \n sMAPE: nAN \n\n """
     mae = str(round(np.mean(np.abs(y_true - y_pred))))
     mape = str(round(np.mean(np.abs((y_true - y_pred) / np.maximum(1e-9, np.abs(y_true)))) * 100.0))
     smape = str(round(np.mean(2.0 * np.abs(y_pred - y_true) / (np.maximum(1e-9, np.abs(y_true) + np.abs(y_pred)))) * 100.0))
-    return f"""\n 📝MAPE:  {mape} \t\t 📝sMAPE:  {smape}"""
+    return f"""\n 📝MAPE:  {mape}% \t 📝sMAPE:  {smape}%"""
 
 def forecast(state):
     logger.info("Forecast in progress.")

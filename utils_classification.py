@@ -218,6 +218,7 @@ def classification_expert(state: State):
                     - Ensure sufficient historical data for training (ALWAYS fetch only 1000 rows.)
                     - MUST include both positive and negative examples in your SQL query
                     - Use CASE WHEN statements to create proper binary targets that include both 0 and 1 values
+                    - Always order sql query data by DimCustomerSK and do not include '-1' values for it.
                     
                     Never include any ticks (`) or markdowns in your answer.
                     
