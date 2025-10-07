@@ -71,9 +71,9 @@ def main():
         elif msg.get("type") == "dataframe":
             df = pd.DataFrame(msg["content"])
             st.chat_message(msg["role"]).dataframe(df, width='stretch')
-        elif msg.get("type") == "plotly":
-            fig = pio.from_json(msg["content"])
-            st.chat_message(msg["role"]).plotly_chart(fig, width='stretch')
+        # elif msg.get("type") == "plotly":
+        #     fig = pio.from_json(msg["content"])
+        #     st.chat_message(msg["role"]).plotly_chart(fig, width='stretch')
         else:
             st.chat_message(msg["role"]).write(msg["content"])
 
@@ -95,7 +95,7 @@ def main():
                     
                     with st.expander("SQL Query", expanded=True):
                         st.markdown("**Generated SQL Query:**")
-                        st.markdown(f"```sql\n{msg}\n```")
+                        st.markdown(f"```sql\n{content}\n```")
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
 
                 if node=="execute_sql" and step.get(node).get("data") is not None and step.get(node).get("show_data"):
@@ -149,6 +149,9 @@ def main():
                         st.markdown("**Insights:**")
                         st.write(content)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
+
+                    st.write(f"📊 Predicted with Prophet-Model with error : {step.get(node).get('accuracy_metrics')}.")
+                    status.update(label="Answer Ready ✅", state="complete")
                         
                 if node == "classification_expert" or node == "classify":
                     status.update(label="Preparing data for prediction...", state="running")
@@ -166,8 +169,8 @@ def main():
                     # Loop through segments and columns together
                     for col, (name, seg) in zip(cols, segment_details.items()):
                         count = len(seg)
-                        percentage = (count / total_segments * 100) if total_segments else 0
-                        col.metric(label=name, value=f"{count:,}", delta=f"{percentage:.1f}%")
+                        # percentage = (count / total_segments * 100) if total_segments else 0
+                        col.metric(label=name, value=f"{count:,}")
                     st.write("Segmentation Details")
                     st.markdown(
                                 "\n".join(f"- **{k}**: {v}" for k, v in segment_details.items())
@@ -203,7 +206,9 @@ def main():
                 if node == END:
                     status.update(label="Answer Ready ✅", state="complete")
                     logger.info("Workflow reached the end node.")
-                    break
+
+                else:
+                    status.update(label="Answer Ready ✅", state="complete")
                     
     except Exception as e:
         logger.error(str(e))
