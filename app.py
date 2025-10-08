@@ -112,8 +112,8 @@ def main():
                     status.update(label="Generating Insights...", state="running")
                     content = f'{step.get(node).get("insights")}'
                     content_type = 'text'
-                    with st.expander("Insights", expanded=True):
-                        st.markdown("**Generated Insights:**")
+                    with st.expander("🔍 Insights", expanded=True):
+                        # st.markdown("**Generated Insights:**")
                         st.write(content)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
 
@@ -121,36 +121,35 @@ def main():
                     status.update(label="Generating Chart...", state="running")
                     content = pio.from_json(step.get(node).get("chart"))
                     content_type = 'plotly'
-                    with st.expander("Charts", expanded=True):
-                        st.markdown("**Generated Chart:**")
+                    with st.expander("📈 Charts", expanded=True):
+                        # st.markdown("**Generated Chart:**")
                         st.plotly_chart(content, use_container_width=True)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
 
                 if node == "forecast":
                     status.update(label="Forecasting...", state="running")
 
-                    with st.expander("Data", expanded=True):
+                    with st.expander("📋 Data", expanded=True):
                         content = step.get(node).get("fcst_data")
                         content_type = 'dataframe'
-                        st.markdown("**📝 Sample Forecasted Data:**")
                         st.dataframe(content)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
 
-                    with st.expander("Chart", expanded=True):
+                    with st.expander("📈 Chart", expanded=True):
                         content = pio.from_json(step.get(node).get("chart"))
                         content_type = 'plotly'
                         st.markdown(f"**📌 Forecast Error Rates**  {step.get(node).get('accuracy_metrics')} ")
                         st.plotly_chart(content, use_container_width=True)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
                     
-                    with st.expander("Forecasted Insights", expanded=True):
+                    with st.expander("🔍 Insights", expanded=True):
                         content = f'{step.get(node).get("insights")}'
                         content_type = 'text'
-                        st.markdown("**🔮 Insights:**")
+                        # st.markdown("**🔮 Insights:**")
                         st.write(content)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
 
-                    content = f"📊 Predicted with Prophet-Model with error : {step.get(node).get('accuracy_metrics')}."
+                    content = f"💯 Predicted with Prophet-Model with error : {step.get(node).get('accuracy_metrics')}."
                     content_type = "text"
                     st.write(content)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
@@ -188,20 +187,20 @@ def main():
                     df_data_preview = pd.DataFrame(content)
                     csv_buf_top = io.StringIO()
 
-                    st.subheader("🏆 Top 100 Most Likely Customers")
+                    st.subheader("🏆 Top Most Likely Customers")
                     st.dataframe(df_data_preview, width='content')
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
 
                     df_data_preview.to_csv(csv_buf_top, index=False)
                     st.download_button(
-                        label="⬇️ Download Top 100 Likely Customers (CSV)",
+                        label="⬇️ Download Top Likely Customers (CSV)",
                         data=csv_buf_top.getvalue(),
                         file_name="top_100_likely_customers.csv",
                         mime="text/csv"
                     )
 
                     metrics = step.get(node).get("metrics", None)
-                    content = f"📊 Predicted with XGBoost-Model with an accuracy of {round(metrics['accuracy']) * 100}%."
+                    content = f"💯 Predicted with XGBoost-Model with an accuracy of {round(metrics['accuracy']) * 100}%."
                     content_type = 'text'
                     st.write(content)
                     st.session_state.messages.append({"role": "assistant", "type": content_type, "content": content})
@@ -212,6 +211,7 @@ def main():
                     logger.info("Workflow reached the end node.")
                     
     except Exception as e:
+        st.error(f"""‼️ Failed to get you an answer due to : {str(e)}""")
         logger.error(str(e))
 
 

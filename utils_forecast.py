@@ -7,7 +7,7 @@ from utils_ttyd import *
 from prophet import Prophet
 import json
 import plotly.graph_objects as go
-
+from datetime import datetime
 
 
 def forecast_expert(state):
@@ -23,10 +23,11 @@ def forecast_expert(state):
                     Remember to include the details for periods, freq for Prophet's `make_future_dataframe` function
                     based on the user's question along with other parameters.
                     Never include any ticks (`) or markdowns in your answer.
-                    If prediction is for a month use last 30 days filter on the data and periods=30 for prophet.
-                    If prediction is for a quarter use monthly aggregated data for last 1 year with the start date of the month representing the date for prophet model.
-                    if prediction is for a quarter use monthly aggregated data for last 5 years with the start date of the month representing the date for prophet model.
-
+                    If prediction is for a week use weekly aggregated data for previous 3 year with the start date of the week representing the date for prophet model.
+                    If prediction is for a month use monthly aggregated data for previous 3 year with the start date of the month representing the date for prophet model.
+                    If prediction is for a quarter use monthly aggregated data for previous 5 years with the start date of the quarter representing the date for prophet model.
+                    If prediction is for a year use monthly aggregated data for previous 5 years with the start date of the month representing the date for prophet model.
+                    
                     User Question:
                     {state["question"]}
 
@@ -94,6 +95,7 @@ def train_prophet(df, prophet_args, make_future_dataframe_args):
     return m, result
 
 def plot_forecast(df_fc: pd.DataFrame, title: str):
+    df_fc = df_fc.sort_values(by="Date", ascending=False).head(24)
     fig = go.Figure()
     
     # Format hover template to show values
