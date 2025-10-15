@@ -1,34 +1,35 @@
-from config import *
+from utils.config import *
 import pandas as pd
 import pyodbc
-from utils_ttyd import *
 import logging
+import os
+from dotenv import load_dotenv
+
+# Ensure .env is loaded
+load_dotenv()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 
-TABLES=["edw.DimCustomer",
-        "edw.FactTour",
-        "edw.FactSalesContract",
-        "edw.DimDate",
-        "edw.DimSalesLocation"]
+# TABLES and RELATIONSHIPS are now imported from config.py
 
-RELATIONSHIPS = """ All joins (Join on SK keys per specifics + guidelines):
-                    - DimCustomerSK: DimCustomer, FactTour, FactSalesContract
-                    - DimLocationSK: DimSalesLocation, FactTour
-                    - DimSalesLocationSK: DimSalesLocation, FactTour, FactSalesContract
-                    - DimCampaignHierarchySK: FactTour, FactSalesContract
-                    - DimTourSK: FactTour, FactSalesContract
+def get_connection_string():
+    """Get database connection string from env or build from components."""
+    # Use connection string from .env if available, otherwise build from components
+    conn_str = os.getenv("conn_str")
+    
+    if not conn_str:
+        # Build from individual components
+        from config import ODBC_DRIVER, ODBC_SERVER_NAME, ODBC_DATABASE_NAME, ODBC_AUTHENTICATION
+        conn_str = f"Driver={ODBC_DRIVER};Server={ODBC_SERVER_NAME};Database={ODBC_DATABASE_NAME};Authentication={ODBC_AUTHENTICATION}"
+    
+    return conn_str
 
-                    Specific Join Relationships:
-                    - Use DimDate and DimSalesLocation only as dimensions
-                """
-
-conn_str = f"Driver={ODBC_DRIVER};\
-            Server={ODBC_SERVER_NAME};\
-            Database={ODBC_DATABASE_NAME};\
-            Authentication={ODBC_AUTHENTICATION}"
+# For backward compatibility, create module-level variable
+conn_str = get_connection_string()
+logger.info(f"Connection string initialized: {conn_str[:50]}..." if conn_str else "Connection string is None")
 
 
 def load_glossary() -> str:
@@ -50,11 +51,15 @@ def get_table_schema(cur) -> str:
     for fqtn in TABLES:
         try:
             schema, name = fqtn.split(".")
-            cur.execute(f"""
+            cur.execute(
+                """
                 SELECT COLUMN_NAME, DATA_TYPE
                 FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE TABLE_SCHEMA = {schema} AND TABLE_NAME = {name}
-                ORDER BY ORDINAL_POSITION""")
+                WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
+                ORDER BY ORDINAL_POSITION
+                """,
+                (schema, name)
+            )
             cols = cur.fetchall()
             lines = [f"- {col} ({type})" for col, type in cols]
             blocks.append(f"Table: {fqtn}\n" + "\n".join(lines))

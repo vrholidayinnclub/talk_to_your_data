@@ -6,7 +6,6 @@ langchain_core
 langchain_openai
 langchain-community
 faiss-cpu
-langgraph
 streamlit
 prophet
 openpyxl
